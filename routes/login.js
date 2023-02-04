@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
 var admin = require("firebase-admin");
-//JSOn web token 
+//JSOn web token
 const jwt = require("jsonwebtoken");
 const db = admin.firestore();
 bcrypt = require("bcryptjs");
-
 
 // //Get all documents JSON
 router.get("/", async (req, res) => {
@@ -17,7 +16,31 @@ router.get("/", async (req, res) => {
     res.send(error);
   }
 });
-
+router.get("/checktoken", (req, res) => {
+  console.log("hello");
+  const token = req.cookies.token || req.headers["x-access-token"];
+  console.log("token = " + token);
+  if (!token) {
+    res.status(401).send({
+      message: "No token provided",
+      islogin: false,
+    });
+  } else {
+    jwt.verify(token, "secret", (err, decoded) => {
+      if (err) {
+        res.status(401).send({
+          message: "Unauthorized",
+        });
+      } else {
+        res.status(200).send({
+          message: "Authorized",
+          islogin: true,
+          token: token,
+        });
+      }
+    });
+  }
+});
 // //Get a document JSON
 router.get("/:id", async (req, res) => {
   try {
@@ -41,7 +64,10 @@ router.post("/", async (req, res) => {
     }
     snapshot.forEach((doc) => {
       const user = doc.data();
-      const passwordIsValid = bcrypt.compareSync(req.body.password, user.password);
+      const passwordIsValid = bcrypt.compareSync(
+        req.body.password,
+        user.password
+      );
       console.log(passwordIsValid);
       if (passwordIsValid !== false) {
         //Generate token
@@ -82,34 +108,6 @@ router.post("/", async (req, res) => {
   }
 });
 
-
-//Check if user is logged in
-router.post("/check", async (req, res) => {
-  try {
-    const token = req.cookies.token || req.headers["x-access-token"] || req.body.token;
-
-    console.log(token + "token");
-
-    if (!token) {
-
-      //Verify token
-      jwt.verify(token, "secret", (err) => {
-        if (err) {
-          res.status(401).send({
-            message: "User is not logged in",
-            islogin: false,
-          });
-        }
-      });
-    } else {
-      res.status(200).send({
-        message: "User is logged in",
-        islogin: true,
-      });
-    }
-  } catch (error) {
-    res.send
-  }
-});
+// code to check if user is logged in or not by checking the token
 
 module.exports = router;
