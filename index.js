@@ -3,7 +3,7 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 app.use(express.json());
 const fs = require("fs");
-
+app.use(express.static(__dirname + "/"));
 //Import cookie parser
 const cookieParser = require("cookie-parser");
 app.use(cookieParser());
@@ -27,13 +27,13 @@ app.use(
   })
 );
 
-const fileUpload = require("express-fileupload");
-// Enable file upload using express-fileupload
-app.use(
-  fileUpload({
-    createParentPath: true,
-  })
-);
+// const fileUpload = require("express-fileupload");
+// // Enable file upload using express-fileupload
+// app.use(
+//   fileUpload({
+//     createParentPath: true,
+//   })
+// );
 
 //Config Firebase
 const { fire_auth } = require("./config/firebase");

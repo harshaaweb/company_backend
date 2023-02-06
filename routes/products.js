@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 var admin = require("firebase-admin");
 const slugify = require("slugify");
-
+const upload = require("../config/image_upload");
 const db = admin.firestore();
 const productsCollection = db.collection("products");
 
@@ -16,7 +16,7 @@ router.get("/", async (req, res) => {
   }
 });
 
-router.post("/", (req, res) => {
+router.post("/", upload.single("banner"), (req, res) => {
   const db = admin.firestore();
   const usersCollection = db.collection("products");
 
@@ -26,7 +26,7 @@ router.post("/", (req, res) => {
     remove: /[*+~.()'"!:@]/g,
     lower: true,
   });
-
+  const url = req.protocol + "://" + req.get("host");
   //Generate Random product id
   const productId =
     Math.random().toString(36).substring(2, 15) +
@@ -41,7 +41,7 @@ router.post("/", (req, res) => {
     slug: slug,
     description: req.body.description,
     price: req.body.price,
-    image: req.body.image,
+    image: url + "/storage/" + req.file.filename,
     vendor: req.body.vendor,
     status: req.body.status,
     sku: sku,
