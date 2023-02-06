@@ -114,36 +114,28 @@ router.get("/sku/:sku", async (req, res) => {
   }
 });
 
-// code to update a product by id
-router.put("/:productId", async (req, res) => {
+// code to get product by id and update it with updating new image
+router.put("/:id", upload.single("banner"), async (req, res) => {
+  console.log(req.body);
   try {
-    const response = await productsCollection.doc(req.params.productId);
-
-    const updatedata = await response
-      .set(
-        {
-          title: req.body.title,
-          description: req.body.description,
-          price: req.body.price,
-          saleprice: req.body.saleprice,
-          image: req.body.image,
-          vendor: req.body.vendor,
-          status: req.body.status,
-          category: req.body.category,
-          type: req.body.type,
-          featured: req.body.featured,
-          language: req.body.language,
-          updatedAt: new Date().toISOString(),
-        },
-        {
-          merge: true,
-        }
-      )
-      .then((res) => {
-        console.log(res);
-      });
-    // res.send(response);
-    res.json({ response: response });
+    const url = req.protocol + "://" + req.get("host");
+    const response = await productsCollection.doc(req.params.id).update({
+      title: req.body.title,
+      description: req.body.description,
+      price: req.body.price,
+      image: url + "/storage/" + req.file.filename,
+      vendor: req.body.vendor,
+      status: req.body.status,
+      salePrice: req.body.saleprice,
+      bidDate: req.body.bidDate,
+      type: req.body.type,
+      featured: req.body.featured,
+      language: req.body.language,
+      company: req.body.company,
+      updatedAt: new Date().toISOString(),
+    });
+    const product = await productsCollection.doc(req.params.id).get();
+    res.json({ message: "Product updated successfully", response, product:product.data() });
   } catch (error) {
     res.json({ message: error.message });
   }

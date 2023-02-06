@@ -16,31 +16,66 @@ router.get("/", async (req, res) => {
     res.send(error);
   }
 });
-router.get("/checktoken", (req, res) => {
-  console.log("hello");
-  const token = req.cookies.token || req.headers["x-access-token"];
-  console.log("token = " + token);
-  if (!token) {
-    res.status(401).send({
-      message: "No token provided",
-      islogin: false,
-    });
-  } else {
-    jwt.verify(token, "secret", (err, decoded) => {
-      if (err) {
-        res.status(401).send({
-          message: "Unauthorized",
-        });
-      } else {
-        res.status(200).send({
-          message: "Authorized",
-          islogin: true,
-          token: token,
-        });
-      }
-    });
+
+// code to chcek user login by token and return user data if token is valid
+router.get("/checktoken", async (req, res) => {
+  try {
+    const token = req.cookies.token || req.headers["x-access-token"];
+    if (!token) {
+      res.status(401).send({
+        message: "No token provided",
+        islogin: false,
+      });
+    } else {
+      jwt.verify(token, "secret", async (err, decoded) => {
+        if (err) {
+          res.status(401).send({
+            message: "Unauthorized",
+          });
+        } else {
+          const userRef = db.collection("users").doc(decoded.id);
+          const response = await userRef.get();
+          res.status(200).send({
+            message: "Authorized",
+            islogin: true,
+            token: token,
+            user: response.data(),
+          });
+        }
+      });
+    }
+  } catch (error) {
+    res.send(error);
   }
 });
+
+// router.get("/checktoken", (req, res) => {
+//   console.log("hello");
+//   const token = req.cookies.token || req.headers["x-access-token"];
+
+//   console.log("token = " + token);
+
+//   if (!token) {
+//     res.status(401).send({
+//       message: "No token provided",
+//       islogin: false,
+//     });
+//   } else {
+//     jwt.verify(token, "secret", (err, decoded) => {
+//       if (err) {
+//         res.status(401).send({
+//           message: "Unauthorized",
+//         });
+//       } else {
+//         res.status(200).send({
+//           message: "Authorized",
+//           islogin: true,
+//           token: token,
+//         });
+//       }
+//     });
+//   }
+// });
 // //Get a document JSON
 router.get("/:id", async (req, res) => {
   try {
